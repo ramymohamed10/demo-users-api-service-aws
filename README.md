@@ -98,6 +98,44 @@ The CI/CD pipeline automates the following tasks:
 3. Build, Tag, and Push Docker Image: Builds the Docker image and pushes it to the ECR repository.
 4. Update Kubernetes Deployment: Updates the image in the Kubernetes deployment and applies changes to the EKS cluster.
 
+### Setup GitHub Secrets and Env Variables:
+#### For AWS access
+In your GitHub repository, go to Settings > Secrets and variables > Actions > New repository secret. Add the following secrets:
+- AWS_ACCESS_KEY_ID: Your AWS access key ID.
+- AWS_SECRET_ACCESS_KEY: Your AWS secret access key.
+
+Add the following ENV Variables:
+- AWS_REGION: AWS region (us-east-1)
+
+#### For EKS access 
+1. **Kubeconfig**
+   Copy the output you've obtained and save it to a file named kubeconfig_minified.
+   ```
+   kubectl config view --flatten --minify > kubeconfig_minified
+   ```
+2. **Base64 Encode the Kubeconfig File**
+   To securely store the kubeconfig as a GitHub secret, encode it in base64.
+   ```
+   cat kubeconfig_minified | base64 | tr -d '\n' > kubeconfig_base64
+   ```
+3. **Copy the Encoded Content**
+   ```
+   cat kubeconfig_base64
+   ```
+   Ensure you copy the entire output without any extra spaces or line breaks.
+
+4. **Add KUBE_CONFIG_DATA as a GitHub Secret**
+   
+   Add the Secret:
+   - Name: KUBE_CONFIG_DATA
+   - Value: Paste the base64-encoded kubeconfig content you copied.
+
+
+
+
+
+
+
 ## Step 5: Deploy the Application to EKS
 ### Kubernetes Deployment (`deployment.yaml`)
 Defines the deployment of the Flask application with two replicas. Includes readiness and liveness probes to monitor the health of the application.
