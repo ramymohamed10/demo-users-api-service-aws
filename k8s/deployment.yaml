@@ -13,19 +13,19 @@ spec:
         app: flask-eks-app
     spec:
       containers:
-      - name: flask-eks-app
-        image: REPLACE_ME_WITH_IMAGE_URI
-        ports:
-        - containerPort: 80
-        readinessProbe:
-          httpGet:
-            path: /healthz
-            port: 80
-          initialDelaySeconds: 5
-          periodSeconds: 10
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: 80
-          initialDelaySeconds: 15
-          periodSeconds: 20
+        - name: flask-eks-app
+          image: REPLACE_ME_WITH_IMAGE_URI
+          ports:
+            - containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 20
