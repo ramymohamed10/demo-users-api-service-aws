@@ -1,68 +1,109 @@
-# Flask REST API Demo
+# Flask Application on AWS EKS with CI/CD Pipeline
 
-This project demonstrates a simple REST API built with Python's Flask framework. The API performs CRUD (Create, Read, Update, Delete) operations on user data, which can be tested locally and deployed to Azure App Service for cloud hosting.
-
-## Features
-
-- Retrieve all users
-- Retrieve a specific user by ID
-- Create a new user
-- Update an existing user
-- Delete a user
-
-## Prerequisites
-
-Before you can run or deploy this app, you need to have the following installed:
-
-- Python 3.x
-- pip (Python package manager)
-- Flask (`pip install Flask`)
-- gunicorn (`pip install gunicorn`)
-- Azure CLI (optional, for deployment)
+This project demonstrates the deployment of a simple Flask application on AWS EKS (Elastic Kubernetes Service) using Docker and Terraform for infrastructure setup. A CI/CD pipeline is configured using GitHub Actions to automate the deployment process.
 
 ## Project Structure
 
-- app.py: Main Flask application 
-- requirements.txt: List of Python dependencies 
-- test-api.http: Test the REST API using the REST Client extension in Visual Studio Code
-- README.md: Documentation
+- **`app.py`**: A basic Flask application that provides a REST API with CRUD operations.
+- **`Dockerfile`**: A Dockerfile to containerize the Flask application.
+- **`main.tf`**: Terraform script for setting up AWS infrastructure, including VPC, subnets, and EKS cluster.
+- **`.github/workflows/main.yaml`**: GitHub Actions CI/CD pipeline configuration for building, pushing the Docker image to ECR, and deploying the application to the EKS cluster.
+- **`k8s/deployment.yaml`**: Kubernetes Deployment file to deploy the Flask application.
+- **`k8s/service.yaml`**: Kubernetes Service file to expose the Flask application via a LoadBalancer.
 
-## Running Locally
+## Step 1: Develop and Containerize the Flask Application
 
-To run the Flask API on your local machine:
+### Flask Application (`app.py`)
 
-1. Clone this repository:
+The Flask application provides the following routes:
 
-   ```bash
-   git clone https://github.com/ramymohamed10/rest-api-demo.git
-   
-2. Navigate to the project directory:
-   ```bash
-   cd flask-rest-api-demo
-3. Install the dependencies:
-   ```bash
-   pip install -r requirements.txt
-4. Run the application:
-   ```bash
-   python app.py
-5. The API will be running at http://127.0.0.1:8000
-6. Use **test-api.http** to test the REST API using the REST Client extension in Visual Studio Code.
+- **`/`**: Welcome message.
+- **`/health`**: Health check endpoint.
+- **`/users`**: CRUD operations for managing users.
 
-## Deploying to Azure
+### Dockerfile
 
-### What is Azure App Service?
+The Dockerfile is used to containerize the Flask application. It uses the official Python 3.9 slim image as the base and installs necessary dependencies.
 
-[Azure App Service](https://learn.microsoft.com/en-us/azure/app-service/) is a fully managed platform for building, deploying, and scaling web apps. With Azure App Service, you can host web applications, REST APIs, and mobile backends in any programming language without managing infrastructure. It provides integrated continuous deployment and scaling features, making it a powerful and flexible solution for cloud-based web hosting.
+   ```dockerfile
+   FROM python:3.9-slim
+   WORKDIR /app
+   COPY . /app
+   RUN pip install --no-cache-dir -r requirements.txt
+   EXPOSE 80
+   CMD ["python", "app.py"]
+   ```
 
-Some key features of Azure App Service include:
-- **Automatic Scaling**: Scale up or out depending on traffic.
-- **Continuous Integration/Continuous Deployment (CI/CD)**: Easily integrate with GitHub, Bitbucket, or Azure DevOps for automated deployments.
-- **Custom Domains and SSL**: Secure your apps with custom domains and certificates.
-- **Load Balancing**: Built-in load balancing to handle high-traffic applications.
-- **Monitoring and Diagnostics**: Access real-time monitoring and logs for troubleshooting.
+## Step 2: Infrastructure as Code with Terraform
 
+In this step, Terraform is used to provision the necessary AWS infrastructure, including the VPC, subnets, and EKS cluster. The infrastructure is defined as code, allowing for reproducibility and version control.
 
-You can learn more about Azure App Service and its features in the [official documentation](https://learn.microsoft.com/en-us/azure/app-service/).
+### Terraform Configuration (`main.tf`)
 
-To learn how to deploy a Python web app (Django, Flask, or FastAPI) to Azure App Service, refer to the [Quickstart Guide](https://learn.microsoft.com/en-us/azure/app-service/quickstart-python?tabs=flask%2Cwindows%2Cazure-cli%2Cazure-cli-deploy%2Cdeploy-instructions-azportal%2Cterminal-bash%2Cdeploy-instructions-zip-azcli). This guide walks you through deploying a Python web app to Azure, leveraging App Service to run your app in a Linux server environment.
+The main Terraform configuration file, `main.tf`, sets up the following AWS resources:
 
+- **VPC (Virtual Private Cloud)**: A custom VPC with public, private, and intra subnets.
+- **EKS (Elastic Kubernetes Service) Cluster**: A managed Kubernetes cluster within the VPC.
+
+### Deploying the Infrastructure
+
+To deploy the infrastructure using Terraform:
+
+1. **Initialize Terraform:**
+   ```
+   terraform init
+   ```
+2. **Validate the configuration::**
+   ```
+   terraform validate
+   ```
+3. **Plan the infrastructure deployment:**
+   ```
+   terraform plan -out=tfplan
+   ```
+4. **Apply the plan:**
+   ```
+   terraform apply tfplan
+   ```
+   This command will show a plan of the changes Terraform will make. Review the plan, and if everything looks correct, confirm the deployment. This process may take several minutes.
+
+5. **To destroy all the resources managed by your current Terraform configuration, simply run:**
+   ```
+   terraform destroy
+   ```
+
+## Step 3: Set Up AWS EKS Cluster and ECR
+After provisioning the infrastructure, the `kubeconfig` file is updated to interact with the EKS cluster. An ECR repository is also created to store Docker images.
+
+1. **Configure kubectl**
+   ```
+   aws eks --region us-east-1 update-kubeconfig --name cluster-name
+   ```
+   Verify the cluster is accessible:
+   ```
+   kubectl get nodes
+   ```
+2. **Create an ECR Repository**
+   Create an Amazon ECR repository to store your Docker images:
+   ```
+   aws ecr create-repository --repository-name repo-name --region us-east-1
+   ```
+   Note the repository URI; you'll need it later.
+
+## Step 4: Configure CI/CD Pipeline with GitHub Actions
+### GitHub Actions Workflow (`main.yaml`)
+The CI/CD pipeline automates the following tasks:
+1. Checkout Code: Fetches the latest code from the repository.
+2. Configure AWS Credentials: Sets up AWS credentials for subsequent steps.
+3. Build, Tag, and Push Docker Image: Builds the Docker image and pushes it to the ECR repository.
+4. Update Kubernetes Deployment: Updates the image in the Kubernetes deployment and applies changes to the EKS cluster.
+
+## Step 5: Deploy the Application to EKS
+### Kubernetes Deployment (`deployment.yaml`)
+Defines the deployment of the Flask application with two replicas. Includes readiness and liveness probes to monitor the health of the application.
+
+### Kubernetes Service (`service.yaml`)
+Exposes the Flask application through a LoadBalancer, allowing external access to the application.
+
+## Conclusion
+This project demonstrates how to build, containerize, and deploy a Flask application on AWS EKS using Docker and Terraform. The CI/CD pipeline automates the build and deployment process, ensuring efficient and consistent deployments.

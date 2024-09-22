@@ -1,3 +1,6 @@
+# main.tf
+  
+}
 provider "aws" {
   region = local.region
 }
@@ -88,4 +91,8 @@ module "eks" {
   }
 
   tags = local.tags
+
+  node_security_group_tags = {
+    "kubernetes.io/cluster/${local.name}" = null
+  }
 }
