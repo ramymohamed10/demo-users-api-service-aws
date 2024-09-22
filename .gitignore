@@ -116,3 +116,6 @@ terraform.rc
 # Ignore generated files or directories
 *.backup
 *.bak
+
+kubeconfig_base64
+kubeconfig_minified
