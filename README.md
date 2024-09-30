@@ -33,6 +33,16 @@ The Dockerfile is used to containerize the Flask application. It uses the offici
    EXPOSE 80
    CMD ["python", "app.py"]
    ```
+Build the Docker image:
+   ```
+   docker build -t flask-eks-app:latest .
+   ```
+Test the Docker image locally:
+   ```
+   docker run -p 80:80 flask-eks-app:latest
+   ```
+Visit http://localhost in your browser to verify it's working.
+
 
 ## Step 2: Infrastructure as Code with Terraform
 
@@ -131,17 +141,39 @@ Add the following ENV Variables:
    - Value: Paste the base64-encoded kubeconfig content you copied.
 
 
-
-
-
-
-
 ## Step 5: Deploy the Application to EKS
+Create a k8s directory in your project root then create `deployment.yaml`and `service.yaml` inside it.
 ### Kubernetes Deployment (`deployment.yaml`)
 Defines the deployment of the Flask application with two replicas. Includes readiness and liveness probes to monitor the health of the application.
 
 ### Kubernetes Service (`service.yaml`)
 Exposes the Flask application through a LoadBalancer, allowing external access to the application.
+
+## Step 6: Implement Monitoring and SRE Best Practices
+For Step 6, we will integrate monitoring and apply SRE (Site Reliability Engineering) best practices to your Flask application running on AWS EKS. This will ensure you have the tools necessary to track the performance, health, and reliability of your application, while adhering to SRE principles to manage reliability at scale. Let’s break down this step into smaller sub-steps.
+
+### Step 6.1: Monitoring Using Prometheus and Grafana
+#### 6.1.1 Install Prometheus on AWS EKS
+Prometheus is an open-source monitoring tool widely used to collect metrics from Kubernetes applications. First, you’ll install Prometheus to scrape metrics from your application and the cluster.
+
+#### 6.1.2 Install Grafana for Visualization
+Grafana is a powerful dashboard tool for visualizing metrics collected by Prometheus.
+
+
+#### 6.1.3 Application Metrics with Flask
+For custom application metrics (like response times, request counts, error rates), integrate Prometheus client libraries into your Flask app:
+
+### Step 6.2: Set Up Logging with AWS CloudWatch
+- Configure Fluentd to Push Logs to CloudWatch: Fluentd is often used to collect logs from Kubernetes pods and push them to AWS CloudWatch.
+
+### Step 6.3: Implement SRE Best Practices
+#### 6.3.1 Set SLIs (Service Level Indicators)
+#### 6.3.2 Set SLOs (Service Level Objectives)
+#### 6.3.3 Set Error Budgets
+
+### Step 6.4: Set Up Alerting
+
+Alertmanager for Prometheus: Install the Alertmanager component of Prometheus to send alerts based on thresholds:
 
 ## Conclusion
 This project demonstrates how to build, containerize, and deploy a Flask application on AWS EKS using Docker and Terraform. The CI/CD pipeline automates the build and deployment process, ensuring efficient and consistent deployments.

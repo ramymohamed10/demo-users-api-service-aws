@@ -46,3 +46,7 @@ Content-Type: application/json
 
 # DELETE a user by ID
 DELETE http://localhost:8000/users/1
+
+
+### Test metrics endpoint
+GET http://localhost:8000/metrics

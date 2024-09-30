@@ -7,8 +7,14 @@
 # abort: to handle errors and send error status codes
 from flask import Flask, jsonify, request, abort
 
+# PrometheusMetrics is used for monitoring and exposing metrics to Prometheus
+from prometheus_flask_exporter import PrometheusMetrics
+
 # Initialize the Flask app
 app = Flask(__name__)
+
+# Initialize Prometheus metrics monitoring with the Flask app
+metrics = PrometheusMetrics(app)
 
 # In-memory "database" of users
 # This list holds a set of user dictionaries. 
