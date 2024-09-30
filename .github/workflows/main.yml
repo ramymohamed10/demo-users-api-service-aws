@@ -8,7 +8,7 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPOSITORY: demo-flask-eks-app
+  ECR_REPOSITORY: flask-app-repo
   CLUSTER_NAME: ramy-cluster
 
 jobs:
